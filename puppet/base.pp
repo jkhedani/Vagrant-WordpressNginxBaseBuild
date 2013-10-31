@@ -44,13 +44,6 @@ class mysql ( $root_password = 'root' ) {
 
 # Install Nginx
 class nginx {
-	
-	# Upload config file before doing anything...
-	file { "/etc/nginx/sites-available/default":
-    ensure => file,
-    source => "${config_path}/default",
-    before => Service["nginx"],
-  }
 
 	# Retrieve required packages if they haven't already been defined
 	if ! defined(Package['nginx']) {
@@ -58,6 +51,20 @@ class nginx {
       require => Exec["apt-get update"],
       ensure => 'present',
     }
+  }
+
+  # Upload config files...
+  file { 'default':
+    path => "/etc/nginx/sites-available/default",
+    ensure => file,
+    source => "${config_path}/default",
+    before => Service["nginx"],
+  }
+  file { 'nginx.conf':
+    path => "/etc/nginx/nginx.conf",
+    ensure => file,
+    source => "${config_path}/nginx.conf",
+    before => Service["nginx"],
   }
 
   # Run Nginx
@@ -71,18 +78,6 @@ class nginx {
 
 # Install php-fpm & other PHP stuffz
 class php-fpm {
-
-	# Upload config files before doing anything...
-	file { "/etc/php5/fpm/pool.d/www.conf":
-    ensure => file,
-    source => "${config_path}/www.conf",
-    before => Service["php5-fpm"],
-  }
-  file { "/etc/php5/apache2/php.ini":
-    ensure => file,
-    source => "${config_path}/php.ini",
-    before => Service["php5-fpm"],
-  }
 	
 	# Retrieve required packages if they haven't already been defined
 	if ! defined(Package['php5-fpm']) {
@@ -102,6 +97,20 @@ class php-fpm {
   package { "php-pear": ensure => present }
   package { "php5-xmlrpc": ensure => present }
 
+  # Upload config files...
+  file { 'www.conf':
+    path => "/etc/php5/fpm/pool.d/www.conf",
+    ensure => file,
+    source => "${config_path}/www.conf",
+    before => Service["php5-fpm"],
+  }
+  #file {  'php.ini':
+  #  path => "/etc/php5/apache2/php.ini",
+  #  ensure => file,
+  #  source => "${config_path}/php.ini",
+  #  before => Service["php5-fpm"],
+  #}
+
   # Run php-fpm
   service { "php5-fpm":
     enable => true,
@@ -114,4 +123,4 @@ class php-fpm {
 include mysql
 include nginx
 include php-fpm
-include phpmyadmin
+# include phpmyadmin
